@@ -109,6 +109,14 @@ if __name__ == "__main__":
     # and the first field as the comment text
     datasets = [
         {
+            'name': 'wikipedia',
+            'path': 'wikipedia.csv',
+            'article_id': '787',
+            'article_title': 'Wikipedia 1/9/17',
+            'article_summary': 'Some comments from Wikipedia.',
+            'category': 'Wikipedia'
+        },
+        {
             'name': 'brexit',
             'path': 'brexit.csv',
             'article_id': '123',
