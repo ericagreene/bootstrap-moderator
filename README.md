@@ -14,4 +14,10 @@ export MODERATOR_AUTH="JWT ..."
 export MODERATOR_API=
 ```
 
-Then run `python bootstrap_revies.py` with Python v3 to load 100 product reviews from each of the 3 data sets.
+You'll need to get a JWT auth token for a service user in your Moderator app. A service user has permission to use the publisher API to write and read data. To generate a JWT token for a service user, run the following command from the `/packages/cli` directory of the conversationai-moderator repo.
+```
+./bin/osmod.js users:get-token --id={USER_ID}
+```
+where `USER_ID` is the id of a Moderator user with type `service`.
+
+Then run `python bootstrap_reviews.py` with Python v3 to load 100 product reviews from each of the 3 data sets.
