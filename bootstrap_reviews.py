@@ -1,4 +1,4 @@
-import http.client
+import requests
 import datetime, json, random, re, os
 
 
@@ -15,8 +15,7 @@ class moderator_client(object):
 
     def __init__(self, auth, api_url):
         self.api_url = api_url
-        self.__conn = http.client.HTTPConnection(api_url)
-        self.__headers = {
+        self.headers = {
             'content-type': "application/json",
             'authorization': auth,
             'cache-control': "no-cache",
@@ -42,17 +41,21 @@ class moderator_client(object):
         }
 
         payload = json.dumps(data)
-        self.__conn.request("POST", "/publisher/articles", payload, self.__headers)
+
+
+
 
         try:
             print("Adding article", sourceId)
 
-            res = self.__conn.getresponse()
+            url = self.api_url + "/publisher/articles"
+            response = requests.post(url, data=payload, headers=self.headers)
+            status = response.status_code
 
-            if res.status != 200:
-                print("Received non-200 response from /publisher/articles:", res.status)
+            if status != 200:
+                print("Received non-200 response from /publisher/articles:", status)
 
-            print("Response:", json.loads(res.read()))
+            print("Response:", response.json())
             print()
 
         except Exception as e:
@@ -82,53 +85,22 @@ class moderator_client(object):
         }
 
         payload = json.dumps(data)
-        self.__conn.request("POST", "/publisher/comments", payload, self.__headers)
 
         try:
             print("Adding comment {0} to product {1}".format(review_id, product_id))
-            res = self.__conn.getresponse()
 
-            if res.status != 200:
-                print("Received non-200 response from /publisher/comments:", res.status)
+            url = self.api_url + "/publisher/comments"
+            response = requests.post(url, data=payload, headers=self.headers)
+            status = response.status_code
 
-            print("Response:", json.loads(res.read()))
+            if status != 200:
+                print("Received non 200 response from /publisher/comments:", status)
+
+            print("Response:", response.json())
             print()
 
         except Exception as e:
             print("Error calling /publisher/comments:", e)
-
-
-def get_product_title(product_id):
-    '''
-    Utility method to hit the Amazon website to get the page title of
-    the product associated with the specified product_id.
-
-    Returns the product title. If no title is found, we return the title
-    "Product - {product_id}".
-    '''
-
-    default_title = "Product - {0}".format(product_id)
-
-    headers = {
-        'cache-control': "no-cache",
-        }
-
-    conn = http.client.HTTPSConnection("www.amazon.com")
-    conn.request("GET", "/dp/" + product_id, headers=headers)
-
-    res = conn.getresponse()
-    data = res.read()
-    text = data.decode("utf-8")
-
-    pattern = re.compile("<title>(.+)</title>")
-
-    m = pattern.search(text)
-
-    if m is None:
-        return default_title
-
-    title = m.group(1)
-    return title.replace("Amazon.com : ", "").replace("Amazon.com:","")
 
 if __name__ == "__main__":
 
@@ -164,7 +136,7 @@ if __name__ == "__main__":
 
                 # create a product
                 if product_id not in product_ids:
-                    title = get_product_title(product_id)
+                    title = "test title" # get_product_title(product_id)
                     url = "http://www.amazon.com/dp/{}".format(product_id)
                     summary = "Some text."
 
