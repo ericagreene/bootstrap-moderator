@@ -1,5 +1,6 @@
+import csv
 import requests
-import datetime, json, random, re, os
+import datetime, json, os
 
 
 # A JWT generated for a service Moderator user
@@ -104,44 +105,62 @@ class moderator_client(object):
 
 if __name__ == "__main__":
 
-    review_files = [
+    # Assumes CSV format with the first line as the header
+    # and the first field as the comment text
+    datasets = [
         {
-            "path": "reviews_Baby.json",
-            "category": "Baby"
+            'name': 'brexit',
+            'path': 'brexit.csv',
+            'article_id': '123',
+            'article_title': 'Brexit 9/1/2017',
+            'article_summary': 'Some thoughts about brexit...',
+            'category': 'Brexit'
         },
         {
-            "path": "reviews_Video_Games.json",
-            "category": "Video Games"
+            'name': 'climate',
+            'path': 'climate.csv',
+            'article_id': '456',
+            'article_title': 'Climate Change 3/10/18',
+            'article_summary': 'Some thoughts about climate change...',
+            'category': 'Climate Change'
         },
         {
-            "path": "reviews_Grocery_and_Gourmet_Food.json",
-            "category": "Gourmet Food"
+            'name': 'election',
+            'path': 'election.csv',
+            'article_id': '789',
+            'article_title': 'US Election 10/20/17',
+            'article_summary': 'Some thoughts about the US election...',
+            'category': 'US Election'
         },
     ]
 
     moderator = moderator_client(AUTH, API_URL)
 
-    for r in review_files:
-        with open(r["path"], 'r') as reviews:
-            product_ids =[]
+    for d in datasets:
 
-            for i in range(REVIEWS_PER_CATEGORY):
-                review = reviews.readline()
-                data = json.loads(review)
+        # create an article
+        title = d['article_title']
+        url = 'https://jigsaw.google.com/'
+        summary = d['article_summary']
+        article_id = d['article_id']
+        data_path = d['path']
+        dataset_name = d['name']
 
-                review_id = data.get("reviewerID", "")
-                reviewer_name = data.get("reviewerName", "")
-                review_text = data.get("reviewText", "")
-                product_id = data.get("asin", "")
+        print('Loading data for {}'.format(title))
+        moderator.create_article(article_id, title, summary, url, d['category'])
 
-                # create a product
-                if product_id not in product_ids:
-                    title = "test title" # get_product_title(product_id)
-                    url = "http://www.amazon.com/dp/{}".format(product_id)
-                    summary = "Some text."
+        file = open(data_path, 'r')
+        lines = csv.reader(file)
 
-                    moderator.create_article(product_id, title, summary, url, r["category"])
-                    product_ids += [product_id]
+        # create a comments
+        for i, item in enumerate(lines):
 
-                # create a comment
-                moderator.create_comment(review_id, product_id, review_text, "USA", reviewer_name)
+            # assume first line of file is a header
+            if i == 0:
+                continue
+
+            comment_id = '{}_{}'.format(dataset_name, i)
+            username = 'Lucas Dixon' # CHANGE THIS
+            text = item[0]
+
+            moderator.create_comment(comment_id, article_id, text, "USA", username)
